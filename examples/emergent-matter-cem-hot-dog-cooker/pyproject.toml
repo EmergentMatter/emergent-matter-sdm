@@ -1,0 +1,55 @@
+[project]
+name = "disco-lens"
+version = "0.1.0"
+description = "Solar hot-dog cooker: four FDM-printed quadrant plates carrying 1284 tilted pads for glued-on mirror tiles, angled so reflected sunlight spreads evenly along a vertical hot dog on a center skewer"
+requires-python = ">=3.13"
+dependencies = [
+    # 2.0 floor: what the tracked .sdm files are built with (2.0 dropped
+    # the empty "couplings" record 0.4 wrote). 0.4 made
+    # canonical_sector_fold jit-safe and added the fold/mirror
+    # GLSL emitters this plate needs to preview out of process. Capped
+    # below the next major so a breaking release is a deliberate bump.
+    "emergent-matter-sdm-core[export]>=2.0,<3",
+    "emergent-matter-sdm-materials>=2.0,<3",
+    "jax>=0.5",
+    "numpy>=2.0",
+    "matplotlib>=3.9",
+    "pymeshfix>=0.18.1",
+]
+
+[project.scripts]
+# The viewer's /reemit contract drives this as a subprocess; see
+# src/disco_lens/cli.py and scripts/check_contract.py.
+disco-lens-build = "disco_lens.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.16", "mypy>=1.14"]
+
+# explicit = true is required: our package names must only ever resolve
+# from our own index, never fall through to public PyPI.
+[[tool.uv.index]]
+name = "em"
+url = "https://get.softwaredefinedmatter.com/simple"
+explicit = true
+
+[tool.uv.sources]
+emergent-matter-sdm-core = { index = "em" }
+emergent-matter-sdm-materials = { index = "em" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/disco_lens"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/disco_lens/py.typed" = "disco_lens/py.typed"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.13"
+files = ["src/disco_lens"]
+

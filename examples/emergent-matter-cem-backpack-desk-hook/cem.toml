@@ -1,0 +1,177 @@
+# cem.toml: the declared surface of the backpack desk hook.
+#
+# Read WITHOUT importing anything: an MCP server's `read_cem` parses this and never
+# resolves `entry_point`. Keep it that way. The moment reading a manifest runs
+# code, "list the CEMs I have" becomes a supply-chain question.
+#
+# `role` says what a change COSTS:
+#   live     bound to a shader uniform; changing it is a uniform write
+#   re-emit  baked into the shader; a change means re-emitting
+#   topology changes how many nodes the tree has; authoring script only
+#   derived  a floor or limit feeding validate(), not geometry
+#   tool     configures the toolchain, not the design
+#
+# Every param here is `live`. The whole part is one polygon whose vertices,
+# and the extrusion and rounding around it, are $ref expressions over these
+# 13 params, so a change never alters the tree's shape: resize the .sdm
+# without re-running build.py.
+#
+# `emits` is the name the param carries in the .sdm. This CEM has no
+# dataclass behind its params; they are declared once, in build.py's PARAMS,
+# under the name they ship as, so `emits` equals the key.
+#
+# Derived values are NOT declared here: the jaw opening
+# (d_table_thickness + d_table_clearance), the loop centre, the top-bar
+# taper slope and the handle entry gap (d_throat - d_lip_height) are all
+# computed inside build.py's outline() and never ship as free params.
+
+[cem]
+name = "backpack_table_hook"
+version = "0.1.0"
+authors = ["EmergentMatter"]
+description = """
+Clamp-on backpack hook for a desk edge: one continuous bent bar that rests \
+on the desk, wraps its edge, and loops into a rounded hook under it. Checked \
+with 2-D and 3-D jax-fem FEA per slicer setting before printing."""
+sdm_core = ">=2.0"
+spec_version = 1
+entry_point = "build:build_part"
+
+# ── Desk fit ─────────────────────────────────────────────────────────────────
+
+[cem.params.d_table_thickness]
+type = "float"
+default = 25.4
+unit = "mm"
+role = "live"
+bounds = [10.0, 50.0]
+emits = "d_table_thickness"
+doc = "Measured table-top thickness."
+
+[cem.params.d_table_clearance]
+type = "float"
+default = 0.6
+unit = "mm"
+role = "live"
+bounds = [0.0, 3.0]
+emits = "d_table_clearance"
+doc = "Slip-fit gap added to the table thickness."
+
+# ── Body ─────────────────────────────────────────────────────────────────────
+
+[cem.params.d_width]
+type = "float"
+default = 45.0
+unit = "mm"
+role = "live"
+bounds = [20.0, 80.0]
+emits = "d_width"
+doc = "Width along the table edge (print height)."
+
+[cem.params.d_wall]
+type = "float"
+default = 12.0
+unit = "mm"
+role = "live"
+bounds = [6.0, 16.0]
+emits = "d_wall"
+doc = "Section thickness of the bent bar; also the top-bar root."
+
+# ── Top bar ──────────────────────────────────────────────────────────────────
+
+[cem.params.d_top_tip]
+type = "float"
+default = 3.0
+unit = "mm"
+role = "live"
+bounds = [2.0, 8.0]
+emits = "d_top_tip"
+doc = "Top-bar thickness at its inner tip."
+
+[cem.params.d_top_length]
+type = "float"
+default = 70.0
+unit = "mm"
+role = "live"
+bounds = [30.0, 150.0]
+emits = "d_top_length"
+doc = "Top-bar reach onto the table from the edge."
+
+# ── Hook ─────────────────────────────────────────────────────────────────────
+
+[cem.params.d_jaw_depth]
+type = "float"
+default = 30.0
+unit = "mm"
+role = "live"
+bounds = [15.0, 100.0]
+emits = "d_jaw_depth"
+doc = "Jaw reach under the table, to the loop-back."
+
+[cem.params.d_throat]
+type = "float"
+default = 24.0
+unit = "mm"
+role = "live"
+bounds = [12.0, 50.0]
+emits = "d_throat"
+doc = "Inside height of the hook for the handle."
+
+[cem.params.d_lip_height]
+type = "float"
+default = 10.0
+unit = "mm"
+role = "live"
+bounds = [3.0, 25.0]
+emits = "d_lip_height"
+doc = "Lip rise above the lower leg (retains the handle)."
+
+[cem.params.d_lip_setback]
+type = "float"
+default = 2.0
+unit = "mm"
+role = "live"
+bounds = [0.0, 20.0]
+emits = "d_lip_setback"
+doc = "Lip outer face distance behind the table edge."
+
+# ── Bends and edges ──────────────────────────────────────────────────────────
+
+[cem.params.d_edge_radius]
+type = "float"
+default = 1.0
+unit = "mm"
+role = "live"
+bounds = [0.2, 3.0]
+emits = "d_edge_radius"
+doc = "Rounding on the side-face edges and convex corners."
+
+[cem.params.d_fillet_table]
+type = "float"
+default = 5.0
+unit = "mm"
+role = "live"
+bounds = [1.0, 10.0]
+emits = "d_fillet_table"
+doc = "Inside bend radius at the two corners that hug the table."
+
+[cem.params.d_fillet_hook]
+type = "float"
+default = 3.0
+unit = "mm"
+role = "live"
+bounds = [0.5, 8.0]
+emits = "d_fillet_hook"
+doc = "Inside bend radius where the lip rises from the leg."
+
+# ── Constraints ─────────────────────────────────────────────────────────
+
+[[cem.constraints]]
+name = "lip_clears_its_bend"
+expr = "d_lip_height > d_fillet_hook + d_wall / 2"
+why = "the lip's rounded cap sits on top of its inside bend. Shorter than that and the two arcs overlap, so the outline polygon folds over itself."
+
+[[cem.constraints]]
+name = "table_bends_do_not_overlap"
+expr = "d_table_thickness + d_table_clearance > 2 * d_fillet_table"
+why = "the two bends that hug the desk share the spine. A desk thinner than both bend radii together leaves no straight spine between them, and the arcs cross."

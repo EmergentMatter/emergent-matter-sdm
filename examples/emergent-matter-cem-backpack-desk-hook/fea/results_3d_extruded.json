@@ -1,0 +1,112 @@
+{
+  "mesh": {
+    "tri2d": 2208,
+    "tets": 72864,
+    "nodes": 112953,
+    "z_planes_mm": [
+      0.0,
+      1.0,
+      5.778,
+      10.556,
+      15.333,
+      20.111,
+      24.889,
+      29.667,
+      34.444,
+      39.222,
+      44.0,
+      45.0
+    ],
+    "h_fine_mm": 2.0
+  },
+  "configs": {
+    "solid_100": {
+      "contact": {
+        "contact_iterations": 6,
+        "active_nodes": 782,
+        "support_total_n": 147.15,
+        "x_load_mm": -26.961,
+        "x_support_mm": -26.961,
+        "max_penetration_mm": 1.6931888189852e-08,
+        "patch_area_mm2": 172.18,
+        "contact_x_range_mm": [
+          -41.4,
+          -15.87
+        ]
+      },
+      "regions": {
+        "top_bend": {
+          "max_principal_mpa": 9.52,
+          "p99_9_mpa": 9.25
+        },
+        "bottom_bend": {
+          "max_principal_mpa": 9.45,
+          "p99_9_mpa": 9.18
+        },
+        "loop": {
+          "max_principal_mpa": 4.3,
+          "p99_9_mpa": 4.18
+        },
+        "top_bar": {
+          "max_principal_mpa": 4.72,
+          "p99_9_mpa": 4.16
+        },
+        "anywhere": {
+          "max_principal_mpa": 9.52,
+          "p99_9_mpa": 8.44
+        }
+      },
+      "interlayer": {
+        "max_sigma_zz_tension_mpa": 2.906,
+        "max_interlayer_shear_mpa": 0.394
+      },
+      "max_displacement_mm": 1.825
+    },
+    "6perim_40gyroid": {
+      "contact": {
+        "contact_iterations": 7,
+        "active_nodes": 1730,
+        "support_total_n": 147.15,
+        "x_load_mm": -26.961,
+        "x_support_mm": -26.961,
+        "max_penetration_mm": 1.5141605090725945e-08,
+        "patch_area_mm2": 172.18,
+        "contact_x_range_mm": [
+          -60.92,
+          -12.87
+        ]
+      },
+      "regions": {
+        "top_bend": {
+          "max_principal_mpa": 12.19,
+          "p99_9_mpa": 11.43
+        },
+        "bottom_bend": {
+          "max_principal_mpa": 11.57,
+          "p99_9_mpa": 11.25
+        },
+        "loop": {
+          "max_principal_mpa": 5.15,
+          "p99_9_mpa": 5.03
+        },
+        "top_bar": {
+          "max_principal_mpa": 6.27,
+          "p99_9_mpa": 5.26
+        },
+        "anywhere": {
+          "max_principal_mpa": 12.19,
+          "p99_9_mpa": 10.5
+        }
+      },
+      "infill_max_abs_principal_mpa": 1.951,
+      "infill_utilisation": 0.504,
+      "solid_material_peak_s1_mpa": 11.62,
+      "solid_material_p99_9_s1_mpa": 10.56,
+      "interlayer": {
+        "max_sigma_zz_tension_mpa": 3.156,
+        "max_interlayer_shear_mpa": 1.058
+      },
+      "max_displacement_mm": 2.547
+    }
+  }
+}

@@ -1,0 +1,412 @@
+# cem.toml: the declared surface of the disco-lens solar cooker.
+#
+# What a tool reads when handed this repo, and it is read WITHOUT
+# importing anything: an MCP server's read_cem parses it and never resolves
+# entry_point. Keep it that way. The moment reading a manifest runs
+# code, "list the CEMs I have" becomes a supply-chain question.
+#
+# This describes the design being built: four identical quadrant
+# plates glued into a 410 mm square. Earlier revisions live in git
+# history (v1 is tagged), not here - a manifest describes the design
+# being built, not every design the repo has ever built.
+#
+# `role` says what a change COSTS:
+#   live:     bound a shader uniform; changing it is a uniform write
+#   re-emit:  baked into the shader; a change means re-emitting
+#   topology: changes how many nodes the tree has; authoring script only
+#   derived:  feeds validate() or the power report, not geometry
+#   tool:     configures the toolchain, not the design
+#
+# One thing about this CEM's roles is worth knowing: NOTHING here is
+# `live`. Every seat is stamped into the tree with its own tilt baked in
+# as a literal, so there is no uniform to scrub, and the cheapest
+# possible change is still a re-emit. Re-emit is cheap though: the aim
+# solve is about 1.4 s for 1284 sites and the tree build is faster than
+# that.
+#
+# `emits` is the name the param carries in the emitted .sdm. This CEM
+# strips the type prefix, except where the document describes something
+# wider than the param does: d_plate_size ships as
+# assembled_plate_size, because one printed part is a quarter of it.
+# Only the five params below carry `emits`; the rest shape the tree
+# without being recorded in it.
+#
+# Derived values are NOT declared here. d_grid_pitch, d_pad_reach,
+# d_quadrant_size, n_grid_cells and the rest are @property on
+# DiscoLensParameters and they stay there: a manifest declares surface,
+# not a second copy of the model.
+
+[cem]
+name = "disco_lens"
+version = "0.1.0"
+authors = ["EmergentMatter"]
+description = "Solar hot-dog cooker: four FDM quadrant plates carrying 1284 tilted mirror pads that spread reflected sunlight evenly along a hot dog."
+sdm_core = ">=0.4"
+spec_version = 1
+entry_point = "disco_lens.sdf_assembly:build_quadrant_part"
+
+# ── Plate ──────────────────────────────────────────────────────────────
+
+[cem.params.d_plate_size]
+type = "float"
+default = 410.4
+unit = "mm"
+role = "topology"
+bounds = [100.0, 600.0]
+emits = "assembled_plate_size"
+doc = "Edge of the ASSEMBLED square. One printed quadrant is half of it. Sets how many mirror sites fit, so a change restamps the tree."
+
+[cem.params.d_base_thickness]
+type = "float"
+default = 3.0
+unit = "mm"
+role = "re-emit"
+bounds = [1.5, 10.0]
+emits = "base_thickness"
+doc = "Flat slab under everything. Pads root 2.5 mm into it."
+
+[cem.params.d_plate_margin]
+type = "float"
+default = 0.25
+unit = "mm"
+role = "topology"
+bounds = [0.0, 5.0]
+doc = "Pad keep-out from the plate edge. Feeds the grid count."
+
+[cem.params.d_plate_corner_radius]
+type = "float"
+default = 8.0
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 30.0]
+doc = "Rounded plan corners on the assembled square."
+
+[cem.params.d_rim_height]
+type = "float"
+default = 12.0
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 40.0]
+doc = "Stiffening wall above the plate top."
+
+[cem.params.d_rim_thickness]
+type = "float"
+default = 2.4
+unit = "mm"
+role = "re-emit"
+bounds = [0.8, 10.0]
+doc = "Rim wall thickness. 2.4 is six perimeters of 0.4."
+
+[cem.params.d_perimeter_raise]
+type = "float"
+default = 20.0
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 60.0]
+doc = "Corner height of the quadratic stadium ramp the mirrors ride. Puts the raise where the steep pads are, which recovers light the flat layout loses to pad self-shadowing."
+
+# ── Mirrors and pads ───────────────────────────────────────────────────
+
+[cem.params.d_mirror_size]
+type = "float"
+default = 10.05
+unit = "mm"
+role = "topology"
+bounds = [5.0, 50.0]
+emits = "mirror_size"
+doc = "Measured square mirror edge. With the gap it sets the pitch, so it sets the site count."
+
+[cem.params.d_mirror_thickness]
+type = "float"
+default = 2.0
+unit = "mm"
+role = "re-emit"
+bounds = [0.5, 6.0]
+doc = "ASSUMED tile thickness, not measured. Sets the optical stack height; check your actual tiles."
+
+[cem.params.d_mirror_gap]
+type = "float"
+default = 1.0
+unit = "mm"
+role = "topology"
+bounds = [0.2, 10.0]
+doc = "Clear air between mirror edges. With the mirror size it sets the pitch and therefore the site count."
+
+[cem.params.d_glue_gap]
+type = "float"
+default = 0.3
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 2.0]
+doc = "Adhesive layer under the mirror."
+
+[cem.params.d_pad_extra]
+type = "float"
+default = 0.2
+unit = "mm"
+role = "topology"
+bounds = [0.0, 3.0]
+doc = "Pad ledge beyond the mirror edge. This ledge IS the placement guide when gluing. Feeds pad reach and so the grid count."
+
+[cem.params.d_fuse_ledge]
+type = "float"
+default = 0.7
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 3.0]
+doc = "Collar margin beyond the mirror. Collars overlap their neighbours so the pad field prints as one body instead of thousands of per-layer islands."
+
+[cem.params.d_fuse_drop]
+type = "float"
+default = 1.5
+unit = "mm"
+role = "re-emit"
+bounds = [0.2, 5.0]
+doc = "Collar top below the pad plane."
+
+[cem.params.d_pad_clearance]
+type = "float"
+default = 0.4
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 3.0]
+doc = "Lowest pad corner above the plate top."
+
+# ── Pedestal, skewer and the dog ───────────────────────────────────────
+
+[cem.params.d_hub_height]
+type = "float"
+default = 60.0
+unit = "mm"
+role = "re-emit"
+bounds = [20.0, 120.0]
+doc = "Pedestal height above the plate top, and therefore where the dog sits. Rob's ceiling is 60: a 120 mm pedestal ray-traced better but stood the dog too high."
+
+[cem.params.d_stick_hole_diameter]
+type = "float"
+default = 4.1
+unit = "mm"
+role = "re-emit"
+bounds = [2.0, 12.0]
+emits = "stick_hole_diameter"
+doc = "Skewer bore through the pedestal. Sized for a round 4 mm steel skewer and printed slightly undersize; ream to fit."
+
+[cem.params.d_dog_length]
+type = "float"
+default = 136.0
+unit = "mm"
+role = "re-emit"
+bounds = [50.0, 300.0]
+emits = "dog_length"
+doc = "Measured length of the hot dog. Sets the span the aim optimizer has to light evenly."
+
+[cem.params.d_dog_diameter]
+type = "float"
+default = 20.0
+unit = "mm"
+role = "re-emit"
+bounds = [10.0, 60.0]
+doc = "Measured dog diameter. Also the shadow everything at the centre has to hide inside."
+
+# ── Clamp ring over the assembled pedestal ─────────────────────────────
+
+[cem.params.d_ring_height]
+type = "float"
+default = 12.0
+unit = "mm"
+role = "re-emit"
+bounds = [4.0, 40.0]
+doc = "Height of the printed ring that holds the four quarter-posts together."
+
+[cem.params.d_ring_wall]
+type = "float"
+default = 2.2
+unit = "mm"
+role = "re-emit"
+bounds = [1.0, 6.0]
+doc = "Ring wall. 2.2 keeps the OD inside the dog's shadow."
+
+[cem.params.d_ring_clearance]
+type = "float"
+default = 0.3
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 1.5]
+doc = "Radial slip fit, ring bore to assembled post."
+
+# ── Pinhole sight ──────────────────────────────────────────────────────
+
+[cem.params.d_sight_tab_length]
+type = "float"
+default = 18.0
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 60.0]
+doc = "Tab reach beyond the plate edge. Counts against the bed along X."
+
+[cem.params.d_sight_tab_width]
+type = "float"
+default = 26.0
+unit = "mm"
+role = "re-emit"
+bounds = [5.0, 100.0]
+doc = "Tab width. One boss per tab, so no screw row to straddle."
+
+[cem.params.d_sight_tab_root]
+type = "float"
+default = 9.0
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 40.0]
+doc = "Tab reach INTO the plate. Has to pass the rounded corner arc or the tab hangs off nothing."
+
+[cem.params.d_sight_tab_corner_radius]
+type = "float"
+default = 5.0
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 20.0]
+doc = "Rounded corners on the sight tab."
+
+[cem.params.d_sight_boss_diameter]
+type = "float"
+default = 9.0
+unit = "mm"
+role = "re-emit"
+bounds = [3.0, 30.0]
+doc = "Outside of the pinhole boss."
+
+[cem.params.d_sight_boss_height]
+type = "float"
+default = 28.0
+unit = "mm"
+role = "re-emit"
+bounds = [5.0, 80.0]
+doc = "Boss height above the plate top. With the bore it sets how sharply the sight goes dark off-aim."
+
+[cem.params.d_sight_hole_diameter]
+type = "float"
+default = 1.4
+unit = "mm"
+role = "re-emit"
+bounds = [0.4, 6.0]
+doc = "Pinhole bore. Narrower keeps the aiming cutoff tight; a bright dot below the bore means aimed."
+
+[cem.params.d_sight_boss_fillet]
+type = "float"
+default = 3.0
+unit = "mm"
+role = "re-emit"
+bounds = [0.0, 10.0]
+doc = "Conical skirt at the boss root."
+
+[cem.params.d_min_site_radius]
+type = "float"
+default = 23.0
+unit = "mm"
+role = "topology"
+bounds = [5.0, 100.0]
+doc = "Keep-out radius around the pedestal. Sites inside it are dropped, so it changes the site count."
+
+[cem.params.d_min_beam_slope]
+type = "float"
+default = 0.45
+unit = "ratio"
+role = "re-emit"
+bounds = [0.0, 2.0]
+doc = "Floor on aim slope, so far mirrors only take high targets. Raised from an earlier 0.3 because at 410 mm the corner mirrors would otherwise graze along the field."
+
+[cem.params.d_sun_half_angle]
+type = "float"
+default = 0.00465
+unit = "rad"
+role = "re-emit"
+bounds = [0.0, 0.05]
+doc = "The sun is not a point. Blurs every stripe by an amount that grows with path length, so it changes the optimized aims and therefore the pad tilts."
+
+[cem.params.d_solar_irradiance]
+type = "float"
+default = 900.0
+unit = "W/m^2"
+role = "derived"
+bounds = [200.0, 1100.0]
+doc = "Direct-normal irradiance on a clear day. Scales every site equally, so it moves the reported watts and not the geometry."
+
+[cem.params.d_mirror_reflectivity]
+type = "float"
+default = 0.85
+unit = "ratio"
+role = "derived"
+bounds = [0.1, 1.0]
+doc = "Glass mirror reflectivity. Scales every site equally: reported watts, not geometry."
+
+[cem.params.d_dog_absorptivity]
+type = "float"
+default = 0.8
+unit = "ratio"
+role = "derived"
+bounds = [0.1, 1.0]
+doc = "Fraction of delivered light the dog takes up. Feeds the cook estimate only."
+
+# ── Constraints: the rules no per-param bound can express ──────────────
+#
+# Each name below appears in DiscoLensParameters.validate(), which is
+# what test_every_declared_constraint_is_actually_enforced checks. The
+# manifest is what a tool reads; the Python is what runs. Without that
+# test they drift, and the manifest becomes a description of a design
+# nobody is building.
+
+[[cem.constraints]]
+name = "grid_has_enough_cells"
+expr = "n_grid_cells >= 4"
+why = "below four cells a side there is no mirror field to optimize, and the grid maths divides by a count it assumes is positive"
+
+[[cem.constraints]]
+name = "quadrant_fits_the_bed_x"
+expr = "d_quadrant_size + d_sight_tab_length <= 246.0"
+why = "the printed part is one quadrant PLUS its sight tab, and that total is what has to fit the Prusa bed in X. Checked against a derived value, so no per-param bound can express it"
+
+[[cem.constraints]]
+name = "quadrant_fits_the_bed_y"
+expr = "d_quadrant_size <= 208.0"
+why = "the quadrant is half the assembled plate, so the bed limit is a bound on a derived value rather than on d_plate_size"
+
+[[cem.constraints]]
+name = "sight_bore_leaves_boss_wall"
+expr = "d_sight_hole_diameter < d_sight_boss_diameter - 3.0"
+why = "a pairwise inequality: a bore that eats the boss leaves a sight with no wall to shade it, and the dot stops being readable"
+
+[[cem.constraints]]
+name = "rim_clears_the_grid"
+expr = "grid reach + 1.0 <= d_plate_half - d_rim_thickness"
+why = "the stiffening rim and the outermost pads compete for the same millimetres, and the reach depends on the derived pitch and pad extent"
+
+[[cem.constraints]]
+name = "sight_tab_clears_the_corner_arc"
+expr = "d_sight_tab_root > d_plate_corner_radius"
+why = "a tab rooted inside the rounded corner arc is attached to air"
+
+[[cem.constraints]]
+name = "sites_clear_the_hub"
+expr = "d_min_site_radius > d_hub_diameter / 2.0 + 5.0"
+why = "mirrors crowding the pedestal shadow themselves and cannot reach the dog anyway"
+
+[[cem.constraints]]
+name = "skewer_bore_leaves_hub_wall"
+expr = "d_stick_hole_diameter < d_hub_diameter - 4.0"
+why = "a pairwise inequality; below it the pedestal is a tube too thin to carry the dog"
+
+[[cem.constraints]]
+name = "ring_hides_in_the_dog_shadow"
+expr = "2.0 * d_ring_outer_radius < d_dog_diameter"
+why = "anything at the centre wider than the dog is a mirror target that steals light from the dog. Checked against a derived radius that depends on the ring wall and clearance"
+
+[[cem.objectives]]
+name = "flatten_the_irradiance_profile"
+sense = "minimize"
+unit = "ratio"
+
+[[cem.objectives]]
+name = "maximize_power_on_the_dog"
+sense = "maximize"
+unit = "W"

@@ -1,0 +1,42 @@
+[project]
+name = "backpack-desk-hook"
+version = "0.1.0"
+description = "Clamp-on backpack hook for a desk edge: a parametric .sdm part, checked with 2-D and 3-D jax-fem FEA per slicer setting before printing"
+requires-python = ">=3.13"
+dependencies = [
+    # The build script: geometry, checks, STL export, profile render.
+    "emergent-matter-sdm-core[export]>=2.0,<3",
+    "emergent-matter-sdm-materials>=2.0,<3",
+    "numpy>=2.0",
+    "trimesh>=4.12",
+    "matplotlib>=3.9",
+    # fea/: jax-fem and the dependencies its 0.0.11 release imports but does
+    # not declare. With them installed it imports unpatched.
+    "jax>=0.10",
+    "jax-fem==0.0.11",
+    "fenics-basix>=0.10",
+    "petsc4py>=3.25.1",
+    "pyfiglet>=1.0",
+    "gmsh>=4.15",
+    "meshio>=5.3",
+    "tetgen>=0.8.4",
+    "pyvista>=0.48",
+    "contourpy>=1.3",
+    "scipy>=1.17",
+]
+
+# A runnable example, not a package: nothing here is installed or imported
+# from outside this directory.
+[tool.uv]
+package = false
+
+# explicit = true is required: our package names must only ever resolve
+# from our own index, never fall through to public PyPI.
+[[tool.uv.index]]
+name = "em"
+url = "https://get.softwaredefinedmatter.com/simple"
+explicit = true
+
+[tool.uv.sources]
+emergent-matter-sdm-core = { index = "em" }
+emergent-matter-sdm-materials = { index = "em" }

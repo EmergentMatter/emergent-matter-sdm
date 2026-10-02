@@ -1,0 +1,4 @@
+# Regenerable build artifacts -- see README.md.
+# STLs + manifest from build.py, and headless renders from render.py.
+mega/
+renders/

@@ -1,0 +1,6 @@
+# The hub's rules, plus one exception. This file exists so the exception
+# stays scoped to this example instead of widening the hub's ruff.toml.
+extend = "../../ruff.toml"
+
+[lint.extend-per-file-ignores]
+"build.py" = ["E501"]   # hand-aligned PARAMS table, kept under `# fmt: off`

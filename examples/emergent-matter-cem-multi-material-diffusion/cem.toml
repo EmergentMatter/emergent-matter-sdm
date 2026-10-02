@@ -1,0 +1,170 @@
+# cem.toml — the declared surface of the multi-material diffusion CEM.
+#
+# Read WITHOUT importing anything: an MCP server's `read_cem` parses this and never
+# resolves `entry_point`. Keep it that way — the moment reading a manifest runs
+# code, "list the CEMs I have" becomes a supply-chain question.
+#
+# `role` says what a change COSTS:
+#   live     — bound to a shader uniform; changing it is a uniform write
+#   re-emit  — baked into the shader; a change means re-emitting (sub-second)
+#   topology — changes how many nodes the tree has; authoring script only
+#   derived  — a floor or limit feeding validate(), not geometry
+#   tool     — configures the toolchain, not the design
+#
+# Only `coalescence_mm` is `live`. It is the `k` of every smooth op and ships
+# as a bare {"$ref": ...}, which sdm-core's GLSL emitter turns into a uniform.
+# It CANNOT be an expression: the emitter raises NotImplementedError on
+# expression trees ("compiling expr trees to GLSL is a phase-2 add"), so
+# anything computed has to be baked at authoring time. That single fact is why
+# every other param below is `topology` rather than `live`.
+#
+# `emits` is the name the param carries in the emitted .sdm. This CEM has no
+# dataclass behind its params — they are declared once, under the name they
+# ship as — so `emits` equals the key here rather than stripping a `d_`/`n_`
+# prefix the way the template's widget does. Recorded anyway, so a consumer
+# joining a CEM to its own output never has to guess.
+#
+# DERIVED VALUES ARE NOT DECLARED HERE. The per-species penetration depths
+# (L_red, L_blue), the Matano shift, the mixing-zone extent and the particle
+# counts are all computed from the fields below and never shipped as free
+# params. Flattening a derived value into an independent param is the hexafoil
+# bug: the two desync the moment a slider moves, and the viewer renders the
+# inconsistent state faithfully because nothing errors.
+
+[cem]
+name = "multi_material_diffusion"
+version = "0.2.0"
+authors = ["EmergentMatter"]
+description = """
+A functionally graded two-material bar. Composition follows the erfc solution \
+of Fick's second law for a semi-infinite diffusion couple with asymmetric \
+intrinsic diffusivities; the field is realised as a seeded particle \
+dispersion. Not a diffusion simulation — an analytic profile used as a \
+composition target."""
+sdm_core = ">=0.1"
+spec_version = 1
+entry_point = "build:build_part"
+
+# ── Diffusion couple ───────────────────────────────────────────────────────
+
+[cem.params.reach_mm]
+type = "float"
+default = 34.0
+unit = "mm"
+role = "topology"
+bounds = [3.0, 80.0]
+emits = "reach_mm"
+doc = "Penetration depth L = 2*sqrt(D*t) of the couple, before the balance split. The single length that sets how far mixing reaches."
+
+[cem.params.balance]
+type = "float"
+default = 0.0
+unit = "ratio"
+role = "topology"
+bounds = [-1.0, 1.0]
+emits = "balance"
+doc = "Log-ratio of intrinsic diffusivities: D_red/D_blue = 16^balance. 0 is a symmetric couple; positive makes red the fast species. Depths are normalised so their geometric mean stays reach_mm, so this redistributes reach rather than adding mixing."
+
+[cem.params.sprawl]
+type = "float"
+default = 0.7
+unit = "ratio"
+role = "topology"
+bounds = [0.0, 1.0]
+emits = "sprawl"
+doc = "How far a particle wanders off its lattice site, as a fraction of the spacing. 0 is a rigid crystalline array; 1 is a fully stochastic dispersion."
+
+[cem.params.density]
+type = "float"
+default = 1.25
+unit = "ratio"
+role = "topology"
+bounds = [0.2, 2.0]
+emits = "density"
+doc = "Lattice site density multiplier. This is the particle budget: every particle is another call in the scene function's smooth-union fold, evaluated at every march step."
+
+[cem.params.seed]
+type = "int"
+default = 7
+unit = "count"
+role = "topology"
+bounds = [0, 999]
+emits = "seed"
+doc = "Scatter seed. The build is fully deterministic in it — same seed, same part."
+
+# ── Per-material particle sizing ───────────────────────────────────────────
+
+[cem.params.red_min_mm]
+type = "float"
+default = 0.4
+unit = "mm"
+role = "topology"
+bounds = [0.3, 6.0]
+emits = "red_min_mm"
+doc = "Smallest red particle, at the fringe of the gradient. The 0.3 floor is the manufacturability limit below which a particle is not emitted at all."
+
+[cem.params.red_max_mm]
+type = "float"
+default = 4.0
+unit = "mm"
+role = "topology"
+bounds = [0.5, 9.0]
+emits = "red_max_mm"
+doc = "Largest red particle, at the weld."
+
+[cem.params.blue_min_mm]
+type = "float"
+default = 0.4
+unit = "mm"
+role = "topology"
+bounds = [0.3, 6.0]
+emits = "blue_min_mm"
+doc = "Smallest blue particle, at the fringe of the gradient."
+
+[cem.params.blue_max_mm]
+type = "float"
+default = 4.0
+unit = "mm"
+role = "topology"
+bounds = [0.5, 9.0]
+emits = "blue_max_mm"
+doc = "Largest blue particle, at the weld."
+
+# ── The one live control ───────────────────────────────────────────────────
+
+[cem.params.coalescence_mm]
+type = "float"
+default = 2.4
+unit = "mm"
+role = "live"
+bounds = [0.05, 4.0]
+emits = "coalescence_mm"
+doc = "Smoothing radius k of every smooth union/subtract — how far particles melt into each other and into the bulk. The difference between a bag of marbles and an alloy. Lower bound is 0.05 rather than 0.01 so the slider is not 400x wide; below ~0.05 mm it already reads as a hard union."
+
+# ── Constraints: the rules no per-param bound can express ──────────────────
+#
+# Each is ALSO enforced in build.py's validate(), which returns a list rather
+# than raising so a caller sees every problem at once. The manifest is what a
+# tool reads; the Python is what runs. A constraint whose reason lives only in
+# someone's head gets relaxed by the next person who finds it inconvenient,
+# which is why each carries a `why`.
+
+[[cem.constraints]]
+name = "red_size_range_ordered"
+expr = "red_min_mm < red_max_mm"
+why = "a pairwise ordering, which per-param bounds cannot express. Previously the two were silently swapped when inverted, so the CEM accepted an impossible range and quietly built something else."
+
+[[cem.constraints]]
+name = "blue_size_range_ordered"
+expr = "blue_min_mm < blue_max_mm"
+why = "as above, for the other material"
+
+[[cem.constraints]]
+name = "red_particle_fits_its_gradient"
+expr = "red_max_mm <= L_red"
+why = "checked against a DERIVED value (L_red depends on BOTH reach_mm and balance), so it cannot be a bound on any declared param. A particle wider than its own penetration depth spans the whole zone: the gradient degenerates into a single bead and the part stops demonstrating grading at all."
+
+[[cem.constraints]]
+name = "blue_particle_fits_its_gradient"
+expr = "blue_max_mm <= L_blue"
+why = "as above. Note balance drives L_red and L_blue in OPPOSITE directions, so a balance slide alone can violate this on one side while the other is fine."

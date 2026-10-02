@@ -1,0 +1,61 @@
+# .github/workflows/build-release.yml
+#
+# NOT part of the automated release path. version.yml builds and creates
+# the GitHub Release itself, inline, the moment it pushes the release tag,
+# because the tag it pushes cannot trigger a workflow. For why, see "Why
+# the release is not tag-triggered" in
+# https://github.com/EmergentMatter/actions/blob/main/CONTRACT.md
+#
+# This stub covers the paths that are not automated: a human pushing a
+# `v*` tag by hand (which DOES trigger workflows), and `workflow_dispatch`
+# for manually rebuilding a past release's GitHub Release/wheel. Neither
+# path can complete a PUBLISH once this repo's environment restricts
+# deployment to `main` (both run against a tag): re-publish a release
+# whose publish job failed by re-running that original version.yml run's
+# failed job instead. See CONTRACT.md, "Re-publishing a release".
+name: Build & Release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+jobs:
+  release:
+    uses: EmergentMatter/actions/.github/workflows/build-release.yml@v1
+    permissions:
+      contents: write
+      id-token: write
+    # No `secrets: inherit` -- build-release.yml never reads secrets.*;
+    # publishing uses OIDC trusted publishing (id-token: write above), not
+    # a token. Add it back only if this repo's own copy grows a step that
+    # genuinely needs a named secret.
+    with:
+      # MUST match the @ref above -- see stub-version.yml's own
+      # actions-ref for why. Needed here only so the publish job below can
+      # load check_publish_tier.py / publish_static_index.py from this
+      # repo; every other step in this workflow still needs no checkout of
+      # its own.
+      actions-ref: v1
+      # Opt-in, off by default (S3). Flip to true (and set `environment:`
+      # to a GitHub Environment wired to a PyPI trusted publisher) once
+      # this repo is ready to publish releases to an index.
+      publish: false
+      # DELETE this line unless this repo's pyproject.toml sets
+      # `[tool.uv] package = false` -- a "virtual" project with no
+      # `[project.scripts]`, nothing meant to be installed or
+      # distributed. `has-wheel: false` is what lets this workflow create
+      # a tag-only GitHub Release instead of failing on an empty
+      # wheel/sdist glob; must not be combined with `publish: true`.
+      # has-wheel: false
+
+      # ── Publish target: DELETE unless publish: true above. Defaults to
+      # `pypi`, which is exactly what `publish: true` did before this
+      # input existed -- an existing repo need change nothing. See
+      # docs/onboarding.md, "Publishing to a package index", for the full
+      # walkthrough of every value and what each one needs.
+      # publish-target: static-index   # | codeartifact | both | pypi
+      # aws-role-arn: arn:aws:iam::${{ vars.EM_PUBLISH_ACCOUNT_ID }}:role/<per-repo publish role>
+      # static-index-bucket: ${{ vars.EM_PUBLISH_BUCKET }}
+      # static-index-distribution-id: ${{ vars.EM_PUBLISH_DISTRIBUTION_ID }}
+      # A "closed"-tier repo (see [tool.em-release] tier in pyproject.toml)
+      # is refused for every target except `codeartifact` -- the publish
+      # job checks this before anything uploads.

@@ -1,0 +1,19 @@
+# Copy to `.github/dependabot.yml` in a consuming repo.
+#
+# Two ecosystems: `uv` for the package's own dependencies (uv.lock), and
+# `github-actions` for the pinned SHAs in .github/workflows/ -- including
+# this repo's own version.yml / build-release.yml / changelog-check stubs.
+# Weekly, not daily -- these repos don't need same-day bump PRs, and a
+# weekly batch is easier to review than a trickle.
+
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

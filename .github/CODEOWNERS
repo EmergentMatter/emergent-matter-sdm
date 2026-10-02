@@ -1,0 +1,11 @@
+# Owned by the EmergentMatter maintainers.
+#
+# Copied in from EmergentMatter/actions at onboarding. Edit it if this repo
+# needs different owners: sync.py reports the difference rather than
+# overwriting it.
+
+*                       @telafifi @evanmj @ecarrig
+
+# em-dev runs installs on every developer machine that onboards it -- a
+# narrower owner than the rest of this file, on purpose.
+scripts/em-dev*         @telafifi

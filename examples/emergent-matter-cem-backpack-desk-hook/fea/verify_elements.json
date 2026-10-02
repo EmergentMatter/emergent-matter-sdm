@@ -1,0 +1,24 @@
+{
+  "theory": {
+    "tip_mm": 5.090901771336554,
+    "sigma_mid_mpa": 10.416666666666666
+  },
+  "tri6_plane_stress": {
+    "tip_mm": 5.076244146136825,
+    "sigma_mid_mpa": 10.435656363832877,
+    "reaction_y_n": 49.99999999753644,
+    "nodes": 5841,
+    "tip_error_pct": -0.2879180518126745,
+    "sigma_error_pct": 0.18230109279562257,
+    "reaction_error_pct": -4.9271142721352135e-09
+  },
+  "tet10": {
+    "tip_mm": 5.0332279003259845,
+    "sigma_mid_mpa": 10.42522673513503,
+    "reaction_y_n": 50.00000000102492,
+    "nodes": 9037,
+    "tip_error_pct": -1.1328812379624464,
+    "sigma_error_pct": 0.08217665729630674,
+    "reaction_error_pct": 2.0498491792864115e-09
+  }
+}

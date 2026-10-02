@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backpack Hook FEA</title>
+<style>
+  :root {
+    --bg: #fcfcfb; --fg: #1d1d1f; --muted: #5f6368; --rule: #e3e3e0;
+    --card: #ffffff; --pass: #1a7f37; --fail: #c62828; --accent: #2a78d4;
+    --pass-bg: #e8f5ec; --fail-bg: #fdecec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151517; --fg: #ececec; --muted: #a0a4aa; --rule: #2e2f33;
+      --card: #1d1e21; --pass: #5cc97a; --fail: #ff7b7b; --accent: #6aa8f0;
+      --pass-bg: #17301f; --fail-bg: #3a1c1c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; }
+  h2 { font-size: 1.3rem; margin: 40px 0 12px; padding-top: 12px; border-top: 1px solid var(--rule); }
+  h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+  .meta { color: var(--muted); margin: 0 0 24px; }
+  .verdict {
+    background: var(--card); border: 1px solid var(--rule); border-left: 4px solid var(--accent);
+    padding: 16px 20px; border-radius: 6px;
+  }
+  .verdict p { margin: 6px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 20px 0; }
+  .kpi { background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; }
+  .kpi .v { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .kpi .l { color: var(--muted); font-size: 0.85rem; }
+  figure { margin: 20px 0; }
+  figure img { width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 6px; background: #fff; }
+  figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--rule); text-align: left; white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { text-align: right; }
+  .ok { color: var(--pass); background: var(--pass-bg); }
+  .no { color: var(--fail); background: var(--fail-bg); }
+  tr.max td { font-weight: 600; }
+  ul { padding-left: 20px; }
+  code { font-size: 0.9em; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Backpack table hook: FEA report</h1>
+<p class="meta">Part: <code>backpack_table_hook.sdm</code> · Prusament PLA, printed on its side · jax-fem 0.0.11 · run 2026-10-02</p>
+
+<div class="verdict">
+  <p><strong>Verdict: print it 100 % solid</strong> for a heavy bag that stays on the hook. The solid part passes every load case up to a 19 kg bag left on it 24/7.</p>
+  <p>6 perimeters with 40 % gyroid is fine only for light bags: up to 7 kg left on 24/7, or 14 kg for a few hours. Settings with less infill fail at 15 kg.</p>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">10.0 MPa</div><div class="l">Peak wall stress, solid, 15 kg</div></div>
+  <div class="kpi"><div class="v">5.1</div><div class="l">Safety factor, solid, 15 kg static</div></div>
+  <div class="kpi"><div class="v">19 kg</div><div class="l">Heaviest bag, solid, 24/7</div></div>
+  <div class="kpi"><div class="v">1.8 mm</div><div class="l">Sag at 15 kg, solid</div></div>
+</div>
+
+<h2>1. Setup</h2>
+<ul>
+  <li><strong>Load:</strong> 15 kg (147 N) on a 6 mm handle patch, at the back of the hook loop, which gives the largest lever on the bends.</li>
+  <li><strong>Support:</strong> the desk is a no-pull contact (it can push but not pull), solved as an active set. The desk reaction lines up with the load: both sit at x = −27.01 mm, and penetration stays under 2×10⁻⁸ mm.</li>
+  <li><strong>Material:</strong> E = 2.3 GPa, ν = 0.35, yield 51 MPa (Prusament TDS). Interlayer strength is assumed at 25.5 MPa (50 % of yield).</li>
+  <li><strong>Slicer model:</strong> perimeter walls, solid skins and gyroid core each get their own modulus. The infill uses Gibson–Ashby: E ∝ ρ², strength 0.3·σ<sub>y</sub>·ρ<sup>1.5</sup>.</li>
+  <li><strong>2-D:</strong> plane stress with TRI6 elements, 0.25 mm at the walls. <strong>3-D:</strong> the profile swept into TET10 (72,864 tets, 112,953 nodes, ~339k dofs) with a 30 mm handle.</li>
+  <li><strong>Scaling:</strong> the model is linear with a fixed contact set, so stress scales exactly with bag weight.</li>
+</ul>
+
+<h2>2. Solver verification</h2>
+<p>Before the real run, both element types were checked against a cantilever with a known beam-theory answer (<code>verify_elements.json</code>).</p>
+<div class="scroll"><table>
+  <tr><th>Element</th><th>Nodes</th><th class="n">Tip deflection error</th><th class="n">Mid-span stress error</th><th class="n">Reaction error</th></tr>
+  <tr><td>TRI6 plane stress</td><td class="n">5,841</td><td class="n">−0.29 %</td><td class="n">+0.18 %</td><td class="n">≈ 0</td></tr>
+  <tr><td>TET10</td><td class="n">9,037</td><td class="n">−1.13 %</td><td class="n">+0.08 %</td><td class="n">≈ 0</td></tr>
+</table></div>
+<p>Mesh convergence: halving the wall element size moved the peak by 0.1 % or less (solid and 40 % gyroid).</p>
+
+<h2>3. 2-D results by slicer setting</h2>
+<figure>
+  <img src="fea_2d_summary.png" alt="2-D stress plots for three slicer settings and a bar chart of peak wall stress for eight settings">
+  <figcaption>Peak tensile stress in the printed walls at 15 kg. Only solid, and 6–8 perimeters with 40 % gyroid, stay under the 12.8 MPa long-term limit. Lower-infill settings reach 22–44 MPa, because the infill is what ties the inner and outer walls together.</figcaption>
+</figure>
+<figure>
+  <img src="stress_2d.png" alt="Max principal stress contour for solid and 6 perimeter 40 percent gyroid, deformed ten times">
+  <figcaption>Detail: max principal stress in the solid PLA, deformation drawn ×10. The stress peaks at the inside corners of the two bends that hug the desk.</figcaption>
+</figure>
+
+<h2>4. 3-D check</h2>
+<figure>
+  <img src="fea_3d_summary.png" alt="3-D stress renders for the solid part, the 6 perimeter 40 percent gyroid part, and a mid-width cut showing the infill">
+  <figcaption>TET10 on the extruded profile. The narrow 30 mm handle raises the peak over the 2-D result. Layer peel and layer shear stay low because printing on its side keeps the bending along the layers.</figcaption>
+</figure>
+<div class="scroll"><table>
+  <tr><th>At 15 kg</th><th class="n">100 % solid</th><th class="n">6 perim · 40 % gyroid</th></tr>
+  <tr><td>Peak wall stress, 2-D</td><td class="n">8.76 MPa</td><td class="n">11.19 MPa</td></tr>
+  <tr><td>3-D knockdown (narrow handle)</td><td class="n">×1.137</td><td class="n">×1.107</td></tr>
+  <tr><td><strong>Design peak wall stress</strong></td><td class="n"><strong>9.96 MPa</strong></td><td class="n"><strong>12.38 MPa</strong></td></tr>
+  <tr><td>Infill, share of its own strength</td><td class="n">–</td><td class="n">55 %</td></tr>
+  <tr><td>Layer peel / layer shear</td><td class="n">2.9 / 0.4 MPa</td><td class="n">3.2 / 1.1 MPa</td></tr>
+  <tr><td>Peak by region: top bend / bottom bend</td><td class="n">9.5 / 9.5 MPa</td><td class="n">12.2 / 11.6 MPa</td></tr>
+  <tr><td>Peak by region: loop / top bar</td><td class="n">4.3 / 4.7 MPa</td><td class="n">5.2 / 6.3 MPa</td></tr>
+  <tr><td>Sag</td><td class="n">1.8 mm</td><td class="n">2.5 mm</td></tr>
+</table></div>
+
+<h2>5. Safety factors</h2>
+<p>Each case is checked against yield. The lowest factor across walls, infill and layer bonds governs.</p>
+<div class="scroll"><table>
+  <tr><th>Case</th><th>What it means</th><th class="n">Load</th><th class="n">Required factor</th></tr>
+  <tr><td>Short-term</td><td>Bag hung for minutes to hours</td><td class="n">static</td><td class="n">≥ 2</td></tr>
+  <tr><td>Drop-on</td><td>Bag let go onto the hook from rest</td><td class="n">2 × static</td><td class="n">≥ 1.5</td></tr>
+  <tr><td>24/7</td><td>Bag left on for months (PLA creeps)</td><td class="n">static</td><td class="n">≥ 4</td></tr>
+</table></div>
+
+<h3>100 % solid (walls govern)</h3>
+<div class="scroll"><table>
+  <tr><th>Bag</th><th class="n">Short-term</th><th class="n">Drop-on</th><th class="n">24/7</th></tr>
+  <tr><td>5 kg</td><td class="n ok">15.4</td><td class="n ok">7.7</td><td class="n ok">15.4</td></tr>
+  <tr><td>10 kg</td><td class="n ok">7.7</td><td class="n ok">3.8</td><td class="n ok">7.7</td></tr>
+  <tr><td>15 kg</td><td class="n ok">5.1</td><td class="n ok">2.6</td><td class="n ok">5.1</td></tr>
+  <tr><td>20 kg</td><td class="n ok">3.8</td><td class="n ok">1.9</td><td class="n no">3.8</td></tr>
+  <tr class="max"><td>Heaviest bag that passes</td><td class="n">38.4 kg</td><td class="n">25.6 kg</td><td class="n">19.2 kg</td></tr>
+</table></div>
+
+<h3>6 perimeters · 40 % gyroid (infill governs)</h3>
+<div class="scroll"><table>
+  <tr><th>Bag</th><th class="n">Short-term</th><th class="n">Drop-on</th><th class="n">24/7</th></tr>
+  <tr><td>5 kg</td><td class="n ok">5.5</td><td class="n ok">2.7</td><td class="n ok">5.5</td></tr>
+  <tr><td>10 kg</td><td class="n ok">2.7</td><td class="n no">1.4</td><td class="n no">2.7</td></tr>
+  <tr><td>15 kg</td><td class="n no">1.8</td><td class="n no">0.9</td><td class="n no">1.8</td></tr>
+  <tr><td>20 kg</td><td class="n no">1.4</td><td class="n no">0.7</td><td class="n no">1.4</td></tr>
+  <tr class="max"><td>Heaviest bag that passes</td><td class="n">13.7 kg</td><td class="n">9.1 kg</td><td class="n">6.9 kg</td></tr>
+</table></div>
+<p>The walls alone would pass 15 kg 24/7 (factor 4.1). The infill is the weak link. The layer bonds never limit: their factor is 8 or more at 15 kg.</p>
+
+<h2>6. Assumptions and limits</h2>
+<ul>
+  <li>Infill strength is not measured. The Gibson–Ashby value is conservative, so the gyroid limits are probably pessimistic. A pull test on a printed coupon would settle it.</li>
+  <li>The 24/7 limit of 25 % of yield is a design guide, not Prusament creep data.</li>
+  <li>The drop-on factor of 2 assumes the bag is released from rest. Throwing it onto the hook is worse.</li>
+  <li>The model is linear elastic and small strain, at 23 °C. PLA softens around 55 °C; use PETG for a hot room or a car.</li>
+  <li>The 1 mm side-edge rounding is left out of the 3-D mesh. No load reaches those edges.</li>
+</ul>
+
+<footer>Generated from <code>fea/summary.json</code>, <code>fea/results_3d_extruded.json</code> and <code>fea/verify_elements.json</code>. Regenerate the figures with <code>./run_fea.sh</code>.</footer>
+</main>
+</body>
+</html>

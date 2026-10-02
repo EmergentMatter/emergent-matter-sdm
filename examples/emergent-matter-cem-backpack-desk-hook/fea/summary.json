@@ -1,0 +1,308 @@
+{
+  "yield_mpa": 51.0,
+  "layer_strength_mpa_assumed": 25.5,
+  "fea_load_kg": 15,
+  "cases": {
+    "short_term": {
+      "load_factor": 1.0,
+      "required_fos": 2.0,
+      "meaning": "hung for minutes to hours"
+    },
+    "drop_on": {
+      "load_factor": 2.0,
+      "required_fos": 1.5,
+      "meaning": "let go onto the hook (sudden load, x2)"
+    },
+    "sustained": {
+      "load_factor": 1.0,
+      "required_fos": 4.0,
+      "meaning": "left on the hook 24/7 (creep: stay under 25 % of yield)"
+    }
+  },
+  "configs": {
+    "solid_100": {
+      "label": "100 % solid",
+      "peak_wall_stress_mpa_15kg": 9.96,
+      "peak_2d_mpa": 8.76,
+      "knockdown_3d": 1.137,
+      "mesh_convergence_pct": -0.1,
+      "infill_utilisation_15kg": null,
+      "knockdown_3d_infill": null,
+      "layer_peel_mpa_15kg": 2.906,
+      "layer_shear_mpa_15kg": 0.394,
+      "sag_mm_15kg": 1.825,
+      "sag_2d_mm_15kg": 1.933,
+      "max_kg": {
+        "short_term": 38.4,
+        "drop_on": 25.6,
+        "sustained": 19.2
+      },
+      "loads": {
+        "5_kg": {
+          "short_term": {
+            "fos": 15.36,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 15.36,
+              "layers": 26.32
+            }
+          },
+          "drop_on": {
+            "fos": 7.68,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 7.68,
+              "layers": 13.16
+            }
+          },
+          "sustained": {
+            "fos": 15.36,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 15.36,
+              "layers": 26.32
+            }
+          }
+        },
+        "10_kg": {
+          "short_term": {
+            "fos": 7.68,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 7.68,
+              "layers": 13.16
+            }
+          },
+          "drop_on": {
+            "fos": 3.84,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 3.84,
+              "layers": 6.58
+            }
+          },
+          "sustained": {
+            "fos": 7.68,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 7.68,
+              "layers": 13.16
+            }
+          }
+        },
+        "15_kg": {
+          "short_term": {
+            "fos": 5.12,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 5.12,
+              "layers": 8.77
+            }
+          },
+          "drop_on": {
+            "fos": 2.56,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 2.56,
+              "layers": 4.39
+            }
+          },
+          "sustained": {
+            "fos": 5.12,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 5.12,
+              "layers": 8.77
+            }
+          }
+        },
+        "20_kg": {
+          "short_term": {
+            "fos": 3.84,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 3.84,
+              "layers": 6.58
+            }
+          },
+          "drop_on": {
+            "fos": 1.92,
+            "governs": "walls",
+            "pass": true,
+            "by_part": {
+              "walls": 1.92,
+              "layers": 3.29
+            }
+          },
+          "sustained": {
+            "fos": 3.84,
+            "governs": "walls",
+            "pass": false,
+            "by_part": {
+              "walls": 3.84,
+              "layers": 6.58
+            }
+          }
+        }
+      }
+    },
+    "6perim_40gyroid": {
+      "label": "6 perimeters \u00b7 40 % gyroid",
+      "peak_wall_stress_mpa_15kg": 12.38,
+      "peak_2d_mpa": 11.19,
+      "knockdown_3d": 1.107,
+      "mesh_convergence_pct": 0.0,
+      "infill_utilisation_15kg": 0.548,
+      "knockdown_3d_infill": 1.323,
+      "layer_peel_mpa_15kg": 3.156,
+      "layer_shear_mpa_15kg": 1.058,
+      "sag_mm_15kg": 2.547,
+      "sag_2d_mm_15kg": 2.651,
+      "max_kg": {
+        "short_term": 13.7,
+        "drop_on": 9.1,
+        "sustained": 6.9
+      },
+      "loads": {
+        "5_kg": {
+          "short_term": {
+            "fos": 5.48,
+            "governs": "infill",
+            "pass": true,
+            "by_part": {
+              "walls": 12.36,
+              "layers": 24.24,
+              "infill": 5.48
+            }
+          },
+          "drop_on": {
+            "fos": 2.74,
+            "governs": "infill",
+            "pass": true,
+            "by_part": {
+              "walls": 6.18,
+              "layers": 12.12,
+              "infill": 2.74
+            }
+          },
+          "sustained": {
+            "fos": 5.48,
+            "governs": "infill",
+            "pass": true,
+            "by_part": {
+              "walls": 12.36,
+              "layers": 24.24,
+              "infill": 5.48
+            }
+          }
+        },
+        "10_kg": {
+          "short_term": {
+            "fos": 2.74,
+            "governs": "infill",
+            "pass": true,
+            "by_part": {
+              "walls": 6.18,
+              "layers": 12.12,
+              "infill": 2.74
+            }
+          },
+          "drop_on": {
+            "fos": 1.37,
+            "governs": "infill",
+            "pass": false,
+            "by_part": {
+              "walls": 3.09,
+              "layers": 6.06,
+              "infill": 1.37
+            }
+          },
+          "sustained": {
+            "fos": 2.74,
+            "governs": "infill",
+            "pass": false,
+            "by_part": {
+              "walls": 6.18,
+              "layers": 12.12,
+              "infill": 2.74
+            }
+          }
+        },
+        "15_kg": {
+          "short_term": {
+            "fos": 1.83,
+            "governs": "infill",
+            "pass": false,
+            "by_part": {
+              "walls": 4.12,
+              "layers": 8.08,
+              "infill": 1.83
+            }
+          },
+          "drop_on": {
+            "fos": 0.91,
+            "governs": "infill",
+            "pass": false,
+            "by_part": {
+              "walls": 2.06,
+              "layers": 4.04,
+              "infill": 0.91
+            }
+          },
+          "sustained": {
+            "fos": 1.83,
+            "governs": "infill",
+            "pass": false,
+            "by_part": {
+              "walls": 4.12,
+              "layers": 8.08,
+              "infill": 1.83
+            }
+          }
+        },
+        "20_kg": {
+          "short_term": {
+            "fos": 1.37,
+            "governs": "infill",
+            "pass": false,
+            "by_part": {
+              "walls": 3.09,
+              "layers": 6.06,
+              "infill": 1.37
+            }
+          },
+          "drop_on": {
+            "fos": 0.68,
+            "governs": "infill",
+            "pass": false,
+            "by_part": {
+              "walls": 1.54,
+              "layers": 3.03,
+              "infill": 0.68
+            }
+          },
+          "sustained": {
+            "fos": 1.37,
+            "governs": "infill",
+            "pass": false,
+            "by_part": {
+              "walls": 3.09,
+              "layers": 6.06,
+              "infill": 1.37
+            }
+          }
+        }
+      }
+    }
+  }
+}

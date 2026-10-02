@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/EmergentMatter/emergent-matter-sdm/discussions
+    about: Ask in Discussions rather than opening an issue.
+  - name: Report a vulnerability
+    url: https://github.com/EmergentMatter/emergent-matter-sdm/security/policy
+    about: >-
+      Email security@emergentmatter.com, or use this repository's own
+      Security -> Report a vulnerability button if it has one. Never open
+      a public issue.

@@ -1,0 +1,8 @@
+# Local rule additions and overrides go here, never in ruff-base.toml.
+
+extend = "ruff-base.toml"
+
+[lint.per-file-ignores]
+"src/sdm_showcase/build.py" = ["E501"]   # hand-aligned catalog tables (CATALOG / CONSTRUCTIONS)
+
+# target-version = "py311"   # only on the Python 3.11 floor

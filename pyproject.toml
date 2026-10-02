@@ -1,0 +1,129 @@
+[project]
+name = "emergent-matter-sdm"
+version = "0.0.0"
+description = "Software Defined Matter documentation hub: concepts, ecosystem map, example CEMs, and the renderer for the SDF primitives showcase."
+readme = "README.md"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+authors = [{ name = "Emergent Matter" }]
+keywords = [
+    "software-defined-matter",
+    "signed-distance-functions",
+    "documentation",
+    "showcase",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics :: 3D Rendering",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy>=1.26",
+]
+
+[project.urls]
+Homepage = "https://github.com/EmergentMatter/emergent-matter-sdm"
+Repository = "https://github.com/EmergentMatter/emergent-matter-sdm"
+Issues = "https://github.com/EmergentMatter/emergent-matter-sdm/issues"
+Changelog = "https://github.com/EmergentMatter/emergent-matter-sdm/blob/main/CHANGELOG.md"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sdm_showcase"]
+
+[tool.hatch.build]
+include = [
+    "src/sdm_showcase/**/*.py",
+    "src/sdm_showcase/py.typed",
+]
+
+# ── towncrier: turns changelog.d/ notes into CHANGELOG.md ─────────────────
+#
+# One fragment type per bump level the release workflow understands.
+# compute_bump.py recognizes major, minor, and patch, and exits 1 on
+# anything else, so a type added here has no meaning downstream.
+[tool.towncrier]
+directory = "changelog.d"          # where `uv run scripts/changeset.py` writes notes
+filename = "CHANGELOG.md"
+# Insert this marker into CHANGELOG.md once, above your existing history.
+# towncrier writes new release sections directly below it and never touches
+# anything beneath. Inserting it into a hand-written changelog without
+# disturbing prior entries is covered in
+# https://github.com/EmergentMatter/actions/blob/main/docs/onboarding.md
+start_string = "<!-- towncrier release notes start -->\n"
+title_format = "## {version} ({project_date})"
+underlines = ["-", "~", "^"]
+
+[[tool.towncrier.type]]
+directory = "major"
+name = "Major"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "minor"
+name = "Minor"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "patch"
+name = "Patch"
+showcontent = true
+
+# ── em-release: tells sync_version.py every place the version string lives ──
+#
+# One entry per "path:symbol" location, beyond `[project] version` itself
+# (that one is handled separately, by `uv version --bump` in the release
+# workflow; do not list it here).
+#
+# Every location you list gets written on every release. Anything you don't
+# list is never touched. That's deliberate, so a data/schema version that
+# is meant to move independently of the package version is safe just by
+# being left off this list. A worked example of a catalog version string
+# that *is* listed, because it is meant to track the package version in
+# lockstep, is in
+# https://github.com/EmergentMatter/actions/blob/main/docs/onboarding.md
+[tool.em-release]
+tier = "open"
+templates_version = "v1.15.0"
+version_files = [
+  "src/sdm_showcase/__init__.py:__version__",
+]
+
+# ── mypy ────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.13"
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+# bpy is Blender-embedded (no stubs, no pip package) and software_defined_matter
+# is a sibling repo this package doesn't install (see build.py's lazy-import
+# docstring): both are imported lazily at point of use, never at module scope,
+# so this only relaxes what mypy can check about their call shapes, not the
+# rest of src/.
+[[tool.mypy.overrides]]
+module = ["bpy", "software_defined_matter", "software_defined_matter.*"]
+ignore_missing_imports = true
+
+# ── pytest ──────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+filterwarnings = ["error"]   # per-repo ignores are explicit entries
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.16",
+    "mypy>=1.14",
+]

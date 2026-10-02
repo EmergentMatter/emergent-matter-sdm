@@ -1,0 +1,19 @@
+# .github/workflows/changelog-check.yml
+name: Changelog
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    # Skip on a draft PR until it is marked ready: this stub is pull_request-only
+    # (never workflow_call), so github.event.pull_request always exists here and a
+    # bare draft check, unlike ci.yml's, needs no event_name half.
+    if: github.event.pull_request.draft == false
+    # Required: changelog-check is a composite action and cannot declare
+    # its own permissions.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: EmergentMatter/actions/changelog-check@v1

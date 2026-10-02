@@ -1,0 +1,64 @@
+# .github/workflows/version.yml
+name: Version
+on:
+  push:
+    branches: [main]
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml      # the repo's OWN checks (C4)
+    # No `secrets: inherit` here: this repo's ci.yml needs no repo secret.
+  version:
+    needs: ci
+    uses: EmergentMatter/actions/.github/workflows/version.yml@v1
+    with:
+      # MUST match the @ref above -- see stub-changelog-check.yml for why.
+      actions-ref: v1
+
+      # ── Private sibling checkout: DELETE unless your pyproject.toml has a
+      # `[tool.uv.sources]` entry pointing at a local path. Without it the
+      # bump step fails on that path source -- and CI stays GREEN while it
+      # happens, so the miss shows up only as a release that never gets cut.
+      # Pin sibling-ref to a SHA. See docs/onboarding.md, "A private sibling
+      # your package depends on".
+      # sibling-repo: <owner>/<sibling repo>
+      # sibling-ref: <SHA -- pinned, matching the one your ci.yml uses>
+      # sibling-path: <sibling repo name>
+
+      # ── Second (nested) private sibling: DELETE unless sibling-repo
+      # ABOVE itself pins a private path dependency (consumer -> sibling ->
+      # sibling2). Requires sibling-repo to also be set; sibling-repo names
+      # your DIRECT dependency. See docs/onboarding.md, "A second, nested
+      # sibling".
+      # sibling2-repo: <owner>/<nested sibling repo>
+      # sibling2-ref: <SHA -- pinned, matching sibling-repo's own ci.yml>
+      # sibling2-path: <nested sibling repo name>
+
+      # ── Third (doubly nested) private sibling: DELETE unless sibling2-repo
+      # ABOVE itself pins a private path dependency (consumer -> sibling ->
+      # sibling2 -> sibling3). Requires sibling2-repo to also be set. See
+      # docs/onboarding.md, "A third, doubly nested sibling".
+      # sibling3-repo: <owner>/<doubly nested sibling repo>
+      # sibling3-ref: <SHA -- pinned, matching sibling2-repo's own ci.yml>
+      # sibling3-path: <doubly nested sibling repo name>
+
+      publish: true
+      publish-target: both
+      environment: production
+      aws-role-arn: arn:aws:iam::${{ vars.EM_PUBLISH_ACCOUNT_ID }}:role/oidc-open-tier-publish-sdm-em-prod-us-east-2
+      static-index-bucket: ${{ vars.EM_PUBLISH_BUCKET }}
+      static-index-distribution-id: ${{ vars.EM_PUBLISH_DISTRIBUTION_ID }}
+    permissions: { contents: write, pull-requests: write, id-token: write }
+
+    # ── DELETE alongside the sibling-* inputs above if you aren't using them.
+    # sibling-token / sibling2-token / sibling3-token each name a DIFFERENT
+    # secret, one per repo.
+    # secrets:
+    #   sibling-token: ${{ secrets.<SIBLING_TOKEN_SECRET> }}
+    #   sibling2-token: ${{ secrets.<NESTED_SIBLING_TOKEN_SECRET> }}  # only with sibling2-*
+    #   sibling3-token: ${{ secrets.<DOUBLY_NESTED_SIBLING_TOKEN_SECRET> }}  # only with sibling3-*
+
+    # NO `secrets: inherit` here, deliberately. `sibling-token` above is the
+    # only secret the shared workflows read, and it is mapped BY NAME;
+    # everything else uses the auto-injected `github.token`. Inheriting would
+    # hand a public repo behind a movable `v1` tag your whole org secret
+    # store. Map the one secret you need; never inherit.

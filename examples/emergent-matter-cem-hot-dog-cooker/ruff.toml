@@ -1,0 +1,6 @@
+# The hub's rules, unchanged. This file exists only so ruff resolves
+# first-party imports from THIS example's src/: without it the project root
+# is the hub's, `disco_lens` reads as third-party, and import grouping here
+# disagrees with the standalone repo this example is kept in sync with.
+extend = "../../ruff.toml"
+src = ["src"]

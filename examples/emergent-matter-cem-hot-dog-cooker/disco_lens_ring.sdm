@@ -1,0 +1,83 @@
+{
+  "schema_version": "0.2",
+  "name": "disco_lens_ring",
+  "metadata": {
+    "units": "mm",
+    "am_process": "FDM",
+    "notes": "Pedestal clamp ring: slides over the four glued quarter-posts, flush with the post top; the dog seats on the combined top face. Chamfered bore goes DOWN. Ream lightly if the fit is tight."
+  },
+  "params": {},
+  "materials": [
+    {
+      "material_id": 1,
+      "name": "petg_fdm",
+      "sdf_tree": {
+        "type": "op",
+        "op": "subtract",
+        "children": [
+          {
+            "type": "transform",
+            "transform": "translate",
+            "child": {
+              "type": "primitive",
+              "kind": "capped_cylinder",
+              "params": {
+                "h": 6.0,
+                "r": 9.75
+              }
+            },
+            "params": {
+              "t": [
+                0.0,
+                0.0,
+                6.0
+              ]
+            }
+          },
+          {
+            "type": "transform",
+            "transform": "translate",
+            "child": {
+              "type": "primitive",
+              "kind": "capped_cylinder",
+              "params": {
+                "h": 7.0,
+                "r": 7.55
+              }
+            },
+            "params": {
+              "t": [
+                0.0,
+                0.0,
+                6.0
+              ]
+            }
+          },
+          {
+            "type": "transform",
+            "transform": "translate",
+            "child": {
+              "type": "primitive",
+              "kind": "capped_cone",
+              "params": {
+                "h": 1.25,
+                "r1": 8.35,
+                "r2": 7.55
+              }
+            },
+            "params": {
+              "t": [
+                0.0,
+                0.0,
+                0.75
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "objectives": [],
+  "constraints": [],
+  "history": []
+}

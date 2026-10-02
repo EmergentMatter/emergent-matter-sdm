@@ -1,0 +1,13 @@
+# Shared ruff ruleset. Do not edit in a consuming repo -- put local
+# additions in ruff.toml instead.
+
+line-length = 100
+
+# Repos on the 3.11 floor override this in their own ruff.toml.
+target-version = "py313"
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "RET", "PTH"]
+
+[format]
+# Opt a catalog/data module out per-file with `# fmt: off` / `# fmt: on`.

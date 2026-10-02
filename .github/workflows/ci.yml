@@ -1,0 +1,224 @@
+# Starting CI template for a consuming repo. Copy to
+# `.github/workflows/ci.yml` and adjust as the repo needs.
+#
+# Most repos in the org currently run no automated checks at all; this is
+# the floor every repo gets on day one, not the ceiling. Consistent job
+# names across every repo that copies this (C4), so "the lint job" and
+# "the build job" mean the same thing everywhere:
+#
+#   lint      - advisory during rollout; see the staged-rollout note on the
+#               lint job below. Turning a linter on across an established
+#               codebase produces a pile of findings unrelated to whatever
+#               PR happens to trip the check first, and a check people
+#               learn to click past is worse than no check. Clear the
+#               backlog in its own dedicated PR before enforcing. Don't
+#               skip straight to blocking.
+#   format    - `ruff format --check .`, staged the same way as lint.
+#   typecheck - `mypy src`, staged the same way as lint. See STYLE.md.
+#   test      - runs the repo's test suite. If there isn't one yet, it
+#               still runs (and passes) rather than being skipped outright,
+#               see the "no tests" branch below. The floor is never
+#               zero (C5).
+#   build     - `uv build`, then install the built wheel into a clean
+#               environment and import it, then keep the artifacts. A
+#               green test suite only proves the source tree works; tests
+#               run against source, but users install the built package,
+#               so a repo can be fully green on tests and still be broken
+#               to install. This stage is what actually catches that
+#               (C2) -- and it takes the verify step to do it, because
+#               `uv build` alone reports success for a wheel containing
+#               nothing.
+#
+# A repo with a TypeScript package uncomments the `ts` job below it.
+#
+# `uv sync --locked` in every job fails if uv.lock is out of date, so this
+# always runs on a clean, from-lockfile install rather than trusting
+# whatever's already resolved on a developer's machine (C3).
+#
+# Must stay callable both directly on pull_request AND as a reusable
+# workflow_call: the version.yml stub does `needs: ci` onto this file by
+# reference (`uses: ./.github/workflows/ci.yml`).
+#
+# `name: CI` below is what makes checks display as `CI / lint` etc.
+# instead of falling back to the file path (`.github/workflows/ci.yml /
+# lint`). Safe to add: required-status-check contexts are job names
+# (`lint`, `format`, `typecheck`, `test`, `build`), not the workflow name,
+# so this doesn't touch branch protection.
+
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    # Enforced: no continue-on-error, and `lint` is a required status
+    # check. Stage it back to advisory with `lint_gate.py --job lint off`.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.12.5"
+          python-version: "3.13"
+          # Distinct per job: lint/test/build all cache the same
+          # dependency set and, run concurrently, raced the same
+          # setup-uv-2-... cache key ("Failed to save: Unable to reserve
+          # cache") without this.
+          cache-suffix: lint
+
+      - run: uv sync --locked
+
+      - run: uv run ruff check .
+
+  format:
+    name: format
+    runs-on: ubuntu-latest
+    # Enforced: no continue-on-error, and `format` is a required status
+    # check. Stage it back to advisory with `lint_gate.py --job format off`.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.12.5"
+          python-version: "3.13"
+          cache-suffix: format
+
+      - run: uv sync --locked
+
+      - run: uv run ruff format --check .
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    # Enforced: no continue-on-error, and `typecheck` is a required status
+    # check. Stage it back to advisory with `lint_gate.py --job typecheck off`.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.12.5"
+          python-version: "3.13"
+          cache-suffix: typecheck
+
+      - run: uv sync --locked
+
+      - name: mypy
+        run: |
+          if [ -d src ]; then
+            uv run mypy src
+          else
+            echo "No src/ directory yet -- nothing to typecheck."
+          fi
+
+  # Optional: uncomment for a repo with a TypeScript package. Bun is the
+  # package manager and script runner; adjust `ui` to your package's
+  # directory if it differs. See STYLE.md's "TypeScript" section.
+  # ts:
+  #   name: ts
+  #   runs-on: ubuntu-latest
+  #   # STAGED ROLLOUT. Same as lint above. lint_gate.py doesn't manage
+  #   # this job (its working directory isn't the repo root) -- flip
+  #   # continue-on-error and the required context by hand.
+  #   continue-on-error: true
+  #   steps:
+  #     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+  #
+  #     - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+  #       with:
+  #         bun-version: "1.4.0"   # match package.json's engines.bun
+  #
+  #     - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+  #       # Drop this step if the suite never shells out to node.
+  #       with:
+  #         node-version: "22"
+  #
+  #     - working-directory: ui
+  #       run: bun install --frozen-lockfile
+  #     - working-directory: ui
+  #       run: bun run lint
+  #     - working-directory: ui
+  #       run: bun run typecheck
+  #     - working-directory: ui
+  #       run: bun run format:check
+  #     - working-directory: ui
+  #       run: bun run test
+  #     - working-directory: ui
+  #       run: bun run build
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.12.5"
+          python-version: "3.13"
+          cache-suffix: test
+
+      # Install must be the step immediately before the test run, with
+      # nothing that writes a version string in between. Some repos have
+      # tests that read INSTALLED package metadata (importlib.metadata),
+      # not the source tree. E.g. emergent-matter-sdm-materials asserts
+      # importlib.metadata.version() agrees with the module's __version__.
+      # A fresh sync right before the test step, on every run, makes that
+      # class of "environment vs. tree" drift structurally impossible.
+      # It's a concrete instance of why C3 requires a clean-machine,
+      # from-lockfile install rather than a persisted/cached environment.
+      # If you add a step here later, keep it above this line, not between
+      # sync and test.
+      - run: uv sync --locked
+
+      - name: Run tests
+        run: |
+          if [ -d tests ]; then
+            uv run pytest
+          else
+            echo "No tests/ directory yet, nothing to run. (install + build still ran below.)"
+          fi
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.12.5"
+          python-version: "3.13"
+          cache-suffix: build
+
+      - run: uv sync --locked
+
+      - run: uv build
+
+      # `uv build` exiting 0 does NOT mean the wheel is usable. Verified
+      # against hatchling: a wheel target naming a package directory that
+      # doesn't exist, and `exclude = ["*"]`, both build "successfully" and
+      # produce an artifact with nothing importable in it. Without this step
+      # the build stage only catches builds that fail outright, which is a
+      # weaker claim than the one at the top of this file.
+      #
+      # This installs the wheel into a clean environment, from outside the
+      # checkout, and imports what it declares. Referenced rather than
+      # inlined so a fix reaches every repo when `v1` moves -- unlike this
+      # file, which is a copy.
+      - uses: EmergentMatter/actions/verify-wheel@v1
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist/*
+          retention-days: 14
+          if-no-files-found: error

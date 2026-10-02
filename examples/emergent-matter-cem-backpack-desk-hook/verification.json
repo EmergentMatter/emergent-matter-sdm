@@ -1,0 +1,83 @@
+{
+  "sdm": "backpack_table_hook.sdm",
+  "stl": "backpack_table_hook_pla_3dprint_2026-10-02.stl",
+  "units": "mm",
+  "params": {
+    "d_table_thickness": 25.4,
+    "d_table_clearance": 0.6,
+    "d_width": 45.0,
+    "d_wall": 12.0,
+    "d_top_tip": 3.0,
+    "d_top_length": 70.0,
+    "d_jaw_depth": 30.0,
+    "d_throat": 24.0,
+    "d_lip_height": 10.0,
+    "d_lip_setback": 2.0,
+    "d_edge_radius": 1.0,
+    "d_fillet_table": 5.0,
+    "d_fillet_hook": 3.0
+  },
+  "watertight": true,
+  "bodies": 1,
+  "triangles": 69158,
+  "bounds_mm": [
+    [
+      -70.0,
+      -74.0,
+      -0.0
+    ],
+    [
+      17.6,
+      11.997,
+      45.0
+    ]
+  ],
+  "volume_mm3": 115666.8,
+  "solid_mass_g": 143.4,
+  "table_clearance_min_mm": 0.01,
+  "table_edge_assumed": "knife-sharp (worst case)",
+  "desk_edge_radius_mm": 3.25,
+  "desk_rounded_clearance_min_mm": 0.01,
+  "desk_corner_gap_mm": 0.95,
+  "field_max_grad_deviation": 0.0067,
+  "probes_ok": [
+    "top_bar_mid",
+    "spine",
+    "jaw",
+    "loop_back",
+    "lower_leg",
+    "lip",
+    "throat_center",
+    "handle_entry",
+    "above_top_bar_tip"
+  ],
+  "strength": {
+    "method": "M = W * arm; Winkler curved-beam inner-fibre stress at each bend",
+    "pla_yield_mpa": 51.0,
+    "arm_table_bends_mm": 53.6,
+    "arm_loop_mm": 16.0,
+    "loads": {
+      "10_kg": {
+        "table_bends_mpa": 7.84,
+        "loop_mpa": 1.87,
+        "straight_top_bar_root_mpa": 4.87,
+        "safety_factor_vs_yield": 6.51
+      },
+      "15_kg": {
+        "table_bends_mpa": 11.75,
+        "loop_mpa": 2.81,
+        "straight_top_bar_root_mpa": 7.3,
+        "safety_factor_vs_yield": 4.34
+      },
+      "20_kg": {
+        "table_bends_mpa": 15.67,
+        "loop_mpa": 3.74,
+        "straight_top_bar_root_mpa": 9.74,
+        "safety_factor_vs_yield": 3.25
+      }
+    },
+    "sustained_creep_guide_mpa": 12.8,
+    "load_line_inside_top_bar": true
+  },
+  "export_voxel_mm": 0.2
+}
