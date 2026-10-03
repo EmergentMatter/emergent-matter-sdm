@@ -1,6 +1,6 @@
 [project]
 name = "emergent-matter-sdm"
-version = "0.0.0"
+version = "1.0.0"
 description = "Software Defined Matter documentation hub: concepts, ecosystem map, example CEMs, and the renderer for the SDF primitives showcase."
 readme = "README.md"
 requires-python = ">=3.13"
