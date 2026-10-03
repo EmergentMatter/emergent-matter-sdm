@@ -41,13 +41,7 @@ jobs:
       # sibling3-ref: <SHA -- pinned, matching sibling2-repo's own ci.yml>
       # sibling3-path: <doubly nested sibling repo name>
 
-      publish: true
-      publish-target: both
-      environment: production
-      aws-role-arn: arn:aws:iam::${{ vars.EM_PUBLISH_ACCOUNT_ID }}:role/oidc-open-tier-publish-sdm-em-prod-us-east-2
-      static-index-bucket: ${{ vars.EM_PUBLISH_BUCKET }}
-      static-index-distribution-id: ${{ vars.EM_PUBLISH_DISTRIBUTION_ID }}
-    permissions: { contents: write, pull-requests: write, id-token: write }
+    permissions: { contents: write, pull-requests: write }
 
     # ── DELETE alongside the sibling-* inputs above if you aren't using them.
     # sibling-token / sibling2-token / sibling3-token each name a DIFFERENT
