@@ -64,3 +64,21 @@ Parts declare which materials they may use. The material substrate (`emergent-ma
 ### Couplings
 
 Parts declare how they connect to other parts: mechanical ports, hinge axes, magnetic interfaces, etc. Couplings allow assembly integration without hand-tuning interface geometry.
+
+## Modelling rules
+
+### Parts and Assemblies
+
+A **Part** is one physically inseparable object: the thing that comes off the printer, the machine or the shelf as one piece. It may contain several materials when it is made as one (a co-printed coil and its radiator, an overmoulded insert). Anything that can be separated, whether fastened, bonded, pressed in or simply dropped in place, is its own Part, placed by an **Assembly**. Assemblies contain Parts and other Assemblies, to any depth. A viewer colours by Part, and an Assembly's colour comes up from the Parts in it.
+
+Why: the `.sdm` is what people review, measure and build from. One file per physical part means the file tree is the bill of materials, each part can be inspected, toleranced and replaced on its own, and a viewer can show the design the way the people building it think about it. Many separate bodies packed into one Part's material regions hide all of that.
+
+### Top-down design
+
+When a design has levels, the CEM at the top owns every dimension the levels share (an air gap, a bolt circle, a shaft diameter) and the CEMs below derive from it. A child CEM never redeclares a value its parent owns; it reads it. Change a shared number at the top, rerun, and every `.sdm` below is regenerated consistent with it. The top-level Assembly records the parameters that drove the build.
+
+`sdm-core` also lets an Assembly declare parameters and override its children's ([ADR 0005](https://github.com/EmergentMatter/emergent-matter-sdm-core/blob/main/docs/adr/0005-assembly-foundations.md)), which drives geometry directly from the file without rerunning a CEM, but only for Parts whose trees are written in terms of their parameters (`$ref`), not baked numbers. This rule is about the CEM level, which works today whatever the trees contain.
+
+### Example: an axial-flux motor
+
+An axial-flux motor follows both rules. The stator CEM writes the stator as an Assembly of one file per physical part (coils, core, radiators, water passages, housing, potting, manifold). The motor CEM writes a rotor Assembly (carrier, hub, one magnet placed per pole, hub bolts) and a top-level motor Assembly that places the stator Assembly twice, the rotor Assembly once, and the loose parts (bearings, collars, shims, spacer ring, fasteners). The motor CEM owns the air gap, the magnet, the bearings and the shaft; the stator and rotor are derived from it.
