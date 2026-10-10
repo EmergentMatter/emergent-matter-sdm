@@ -83,6 +83,14 @@ The `.sdm` files are the CEM's output: the complete, current record of the desig
 
 `sdm-core` also lets an Assembly declare parameters and override its children's ([ADR 0005](https://github.com/EmergentMatter/emergent-matter-sdm-core/blob/main/docs/adr/0005-assembly-foundations.md)). That is for designs authored directly as `.sdm`, with no CEM behind them; there the file is the owner. Do not use it to drive a dimension a CEM owns: that gives one number two owners, and they will drift.
 
+### Build each feature once
+
+Anything repeated identically, around a circle, along a line or layer after layer, is built once and patterned with `sdm-core`'s repeat transforms (`canonical_sector_fold`, `repeat_finite`), never written out N times. Concentric steps, grooves, rings and bores on one axis are one revolved 2-D outline (a `revolution` of a `box_2d` or `polygon_2d` profile, which can itself repeat), never stacked cylinders. A part's tree grows with the number of different features, not the number of copies.
+
+Why: every point the field is evaluated at runs through the whole tree. Copies make the tree, the file and every evaluation scale with the count: a printed stator core built as cylinder-pair rings written out per tooth had about 2,000 nodes, and meshing it took minutes and about 24 GB. The same core built once and patterned has 73 nodes and the same geometry. Check such a rebuild by sampling the old and new fields at the same points, densely across any thin gaps, not by validating.
+
+Parts that must be separate files (nine coils, six bolts) are still one Part placed by several Instances in an Assembly, not copies of a tree.
+
 ### Example: an axial-flux motor
 
 An axial-flux motor follows both rules. The stator CEM writes the stator as an Assembly of one file per physical part (coils, core, radiators, water passages, housing, potting, manifold). The motor CEM writes a rotor Assembly (carrier, hub, one magnet placed per pole, hub bolts) and a top-level motor Assembly that places the stator Assembly twice, the rotor Assembly once, and the loose parts (bearings, collars, shims, spacer ring, fasteners). The motor CEM owns the air gap, the magnet, the bearings and the shaft; the stator and rotor are derived from it.
