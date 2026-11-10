@@ -211,3 +211,7 @@ __marimo__/
 .AppleDouble
 .LSOverride
 ._*
+
+# Local graphify tool artifacts (never part of the repo)
+.graphify/
+.graphifyy/
