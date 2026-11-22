@@ -87,7 +87,7 @@ def absorbed_power(p: DiscoLensParameters) -> dict:
     sites = sites_from_table(p, MIRROR_TABLE)
     tree = build_tree(p, sites, b_quadrant=False)
     part = Part(name="assembled")
-    part.add_material(MaterialRegion(material_id=1, name="petg_fdm", sdf_tree=tree))
+    part.add_material(MaterialRegion(material_id=1, name="petg_3dprint", sdf_tree=tree))
     f = make_sdf_closure(tree, part)
 
     # trace() marches every dog-bound ray itself and has already removed
