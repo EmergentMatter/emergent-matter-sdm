@@ -10,7 +10,7 @@
   "materials": [
     {
       "material_id": 1,
-      "name": "petg_fdm",
+      "name": "petg_3dprint",
       "sdf_tree": {
         "type": "op",
         "op": "subtract",

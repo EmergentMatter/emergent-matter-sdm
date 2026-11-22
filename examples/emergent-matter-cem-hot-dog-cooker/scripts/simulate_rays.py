@@ -184,7 +184,7 @@ def main() -> None:
     sites = sites_from_table(p, MIRROR_TABLE)
     tree = build_tree(p, sites, b_quadrant=False)
     part = Part(name="assembled")
-    part.add_material(MaterialRegion(material_id=1, name="petg_fdm", sdf_tree=tree))
+    part.add_material(MaterialRegion(material_id=1, name="petg_3dprint", sdf_tree=tree))
     f = make_sdf_closure(tree, part)
 
     hits, refl, cyl, b_hit, b_dog, b_missed, b_blocked = trace(p, f)

@@ -444,7 +444,9 @@ def build_quadrant_part(p, sites: list[Site]) -> Part:
     )
     for s_field, s_emits, bounds in PARAM_FIELDS:
         part.add_param(Param(s_emits, getattr(p, s_field), free=False, bounds=bounds, unit="mm"))
-    part.add_material(MaterialRegion(material_id=1, name="petg_fdm", sdf_tree=build_tree(p, sites)))
+    part.add_material(
+        MaterialRegion(material_id=1, name="petg_3dprint", sdf_tree=build_tree(p, sites))
+    )
     return part
 
 
@@ -463,5 +465,7 @@ def build_ring_part(p) -> Part:
             ),
         },
     )
-    part.add_material(MaterialRegion(material_id=1, name="petg_fdm", sdf_tree=build_ring_tree(p)))
+    part.add_material(
+        MaterialRegion(material_id=1, name="petg_3dprint", sdf_tree=build_ring_tree(p))
+    )
     return part
